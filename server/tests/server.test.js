@@ -98,3 +98,39 @@ describe('GET /todos/:id', () => {
   }))
 
 });
+
+describe('DELETE /todos/id', () => {
+  it('should remove a todo', (done) => {
+    request(app)
+      .delete(`/todos/${todos[0]._id.toHexString()}`)
+      .expect(200)
+      .expect((res) => {
+        expect(res.body.todo.text).toBe(todos[0].text);
+      })
+      .end((err, res) => {
+        if (err) {
+          return done(err);
+        }
+        Todo.findById(todos[0]._id.toHexString()).then((todo) => {
+          expect(todo).toBeFalsy(); //is the same as toNotExist, but for some reason toNotExist() doesn't work
+          done();
+        }).catch((e) => done(e));
+
+      });
+  });
+
+  it('should return 404, object not found', (done) => {
+    var hexId = new ObjectID().toHexString();
+    request(app)
+      .delete(`/todos/${hexId}`)
+      .expect(404)
+      .end(done);
+  });
+
+  it('should return 404 if no-ObjectID found', (done) => {
+    request(app)
+      .delete('/todos/412k')
+      .expect(404)
+      .end(done);
+  });
+});
